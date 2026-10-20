@@ -666,6 +666,10 @@ export default function App() {
                   ftkData={ftkData}
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -679,6 +683,10 @@ export default function App() {
                   ftkData={ftkData}
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -694,6 +702,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -707,6 +719,10 @@ export default function App() {
                   ftkData={ftkData}
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -720,6 +736,10 @@ export default function App() {
                   ftkData={ftkData}
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -733,6 +753,10 @@ export default function App() {
                   ftkData={ftkData}
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -748,6 +772,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -764,6 +792,10 @@ export default function App() {
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -778,6 +810,10 @@ export default function App() {
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -792,6 +828,10 @@ export default function App() {
                   fnpData={fnpData}
                   allKalijabatItems={allKalijabat}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -807,6 +847,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -822,6 +866,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -837,6 +885,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -852,6 +904,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -869,6 +925,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -884,6 +944,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -899,6 +963,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -914,6 +982,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -929,6 +1001,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -944,6 +1020,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -959,6 +1039,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -976,6 +1060,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -991,6 +1079,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1006,6 +1098,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1021,6 +1117,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1036,6 +1136,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1051,6 +1155,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1066,6 +1174,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1083,6 +1195,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1098,6 +1214,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1113,6 +1233,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1128,6 +1252,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1143,6 +1271,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1158,6 +1290,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1175,6 +1311,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1190,6 +1330,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1205,6 +1349,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1220,6 +1368,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1235,6 +1387,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />
@@ -1250,6 +1406,10 @@ export default function App() {
                   allKalijabatItems={allKalijabat}
                   boxTalentData={boxTalentData}
                   monitoringFjData={monitoringFjData}
+                  rawRjab={rawRjab}
+                  rawRjabA={rawRjabA}
+                  rawRjabMul={rawRjabMul}
+                  rawRjabMsb={rawRjabMsb}
                   isDark={isDark}
                   onShowToast={showToast}
                 />

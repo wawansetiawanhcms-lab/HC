@@ -29,8 +29,8 @@ import {
   LayoutGrid,
   BarChart3,
 } from 'lucide-react';
-import { Employee, FTKItem, FnpItem, KalijabatItem, BoxTalentItem, MonitoringFjItem, PageId } from '../types';
-import { exportToExcel } from '../services/sheetService';
+import { Employee, FTKItem, FnpItem, KalijabatItem, BoxTalentItem, MonitoringFjItem, HistoryItem, PageId } from '../types';
+import { exportToExcel, parseHistoryFromRjab, parseHistoryDirectFromRjab } from '../services/sheetService';
 
 ChartJS.register(
   CategoryScale,
@@ -55,6 +55,10 @@ interface UnitDashboardPageProps {
   allKalijabatItems: { [key: string]: KalijabatItem[] };
   boxTalentData?: BoxTalentItem[];
   monitoringFjData?: MonitoringFjItem[];
+  rawRjab?: any[][];
+  rawRjabA?: any[][];
+  rawRjabMul?: any[][];
+  rawRjabMsb?: any[][];
   isDark: boolean;
   onShowToast: (msg: string, type?: 'info' | 'success' | 'error') => void;
 }
@@ -69,6 +73,10 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
   allKalijabatItems,
   boxTalentData = [],
   monitoringFjData = [],
+  rawRjab = [],
+  rawRjabA = [],
+  rawRjabMul = [],
+  rawRjabMsb = [],
   isDark,
   onShowToast,
 }) => {
@@ -79,6 +87,7 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
   const chartKaliJabatKatRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstances = useRef<{ [key: string]: ChartJS | null }>({});
   const [kalijabatUnitFilter, setKalijabatUnitFilter] = useState<string>('all');
+  const detailHistoryRef = useRef<HTMLDivElement | null>(null);
   const [selectedKalijabatHistory, setSelectedKalijabatHistory] = useState<{
     nama: string;
     unit: string;
@@ -86,7 +95,14 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
     kali: number;
     jenis: string;
     history: string[];
+    parsedHistory?: HistoryItem[];
   } | null>(null);
+
+  useEffect(() => {
+    if (selectedKalijabatHistory && detailHistoryRef.current) {
+      detailHistoryRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedKalijabatHistory]);
 
   const [boxSearch, setBoxSearch] = useState<string>('');
   const [boxUnitFilter, setBoxUnitFilter] = useState<string>('all');
@@ -438,6 +454,7 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
       jabatan: string;
       kali: number;
       jenis: string;
+      jenisKey: string;
       history: string[];
     }[] = [];
 
@@ -468,6 +485,7 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
             jabatan: item.jabatan,
             kali: item.kali,
             jenis: src.label,
+            jenisKey: src.key,
             history: item.history || [],
           });
         }
@@ -476,6 +494,206 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
 
     return combined.sort((a, b) => b.kali - a.kali);
   }, [allKalijabatItems, matchUnit, employees]);
+
+  const handleSelectKalijabatEmployee = (d: {
+    nama: string;
+    unit: string;
+    jabatan: string;
+    kali: number;
+    jenis: string;
+    jenisKey: string;
+    history: string[];
+  }) => {
+    let rData = rawRjab || [];
+    if (d.jenisKey === 'spvd') rData = rawRjab || [];
+    if (d.jenisKey === 'spva_npu') rData = rawRjabA || [];
+    if (d.jenisKey === 'spva_pu') rData = rawRjabMul || [];
+    if (d.jenisKey === 'mdnpu') rData = rawRjabMsb || [];
+
+    const fallbacks = [rawRjab, rawRjabA, rawRjabMul, rawRjabMsb].filter(s => s && s !== rData);
+
+    // Prioritize direct 1-to-1 row lookup from Google Sheets RJAB sheet
+    let parsedHistory = parseHistoryDirectFromRjab(rData, d.nama, fallbacks);
+
+    // Fall back to title/posId lookup if direct history returned no rows
+    if (!parsedHistory || parsedHistory.length === 0) {
+      if (d.history && d.history.length > 0) {
+        parsedHistory = parseHistoryFromRjab(rData, d.nama, d.history, fallbacks, d.unit);
+      }
+    }
+
+    // Ensure fallback unit is d.unit if item.unit is empty or '-'
+    parsedHistory = parsedHistory.map(item => ({
+      ...item,
+      unit: item.unit && item.unit !== '-' && item.unit !== 'null' && item.unit !== 'undefined' ? item.unit : (d.unit || '-'),
+    }));
+
+    // If direct history has fewer items than d.kali, pad with d.history / defaults to ensure row count equals d.kali
+    if (parsedHistory.length < d.kali) {
+      const existingTitles = parsedHistory.map(p => p.jabatan.toLowerCase().trim());
+      const remainingHistory = (d.history || []).filter(h => !existingTitles.includes(h.toLowerCase().trim()));
+
+      for (const hTitle of remainingHistory) {
+        if (parsedHistory.length >= d.kali) break;
+        parsedHistory.push({
+          urutan: parsedHistory.length + 1,
+          namaPegawai: d.nama,
+          jabatan: hTitle,
+          unit: d.unit || '-',
+          startDate: '-',
+          endDate: '-',
+        });
+      }
+      while (parsedHistory.length < d.kali) {
+        parsedHistory.push({
+          urutan: parsedHistory.length + 1,
+          namaPegawai: d.nama,
+          jabatan: d.jabatan || 'Jabatan',
+          unit: d.unit || '-',
+          startDate: '-',
+          endDate: '-',
+        });
+      }
+    } else if (parsedHistory.length > d.kali && d.kali > 0) {
+      parsedHistory = parsedHistory.slice(0, d.kali);
+    }
+
+    setSelectedKalijabatHistory({
+      nama: d.nama,
+      unit: d.unit,
+      jabatan: d.jabatan,
+      kali: d.kali,
+      jenis: d.jenis,
+      history: d.history || [],
+      parsedHistory,
+    });
+
+    setTimeout(() => {
+      detailHistoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
+  const displayHistoryList = useMemo(() => {
+    if (!selectedKalijabatHistory) return [];
+
+    const parseDate = (d: string): number => {
+      if (!d || d === '-' || d === 'null' || d === 'undefined') return 0;
+      const s = String(d).trim();
+      if (!s || s === '-') return 0;
+
+      // Numeric Excel serial date
+      if (/^\d{5}(\.\d+)?$/.test(s)) {
+        const num = parseFloat(s);
+        const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+        return isNaN(date.getTime()) ? 0 : date.getTime();
+      }
+
+      const months: { [key: string]: number } = {
+        jan: 1, januari: 1, feb: 2, februari: 2, mar: 3, maret: 3, apr: 4, april: 4,
+        mei: 5, jun: 6, juni: 6, jul: 7, juli: 7, agu: 8, agustus: 8, sep: 9, september: 9,
+        okt: 10, oktober: 10, nov: 11, november: 11, des: 12, desember: 12
+      };
+
+      const clean = s.toLowerCase();
+      for (const [mName, mNum] of Object.entries(months)) {
+        if (clean.includes(mName)) {
+          const yearMatch = clean.match(/\b(19\d\d|20\d\d)\b/);
+          if (yearMatch) {
+            const year = parseInt(yearMatch[1]);
+            const dayMatch = clean.match(/\b([0-2]?\d|3[01])\b/);
+            const day = dayMatch ? parseInt(dayMatch[1]) : 1;
+            return new Date(year, mNum - 1, day).getTime();
+          }
+        }
+      }
+
+      const p = s.split(/[-/. ]+/);
+
+      if (p.length === 3) {
+        if (/^\d{4}$/.test(p[2])) {
+          const year = parseInt(p[2]);
+          const month = parseInt(p[1]) || 1;
+          const day = parseInt(p[0]) || 1;
+          return new Date(year, month - 1, day).getTime();
+        }
+        if (/^\d{4}$/.test(p[0])) {
+          const year = parseInt(p[0]);
+          const month = parseInt(p[1]) || 1;
+          const day = parseInt(p[2]) || 1;
+          return new Date(year, month - 1, day).getTime();
+        }
+      }
+
+      if (p.length === 2) {
+        if (/^\d{4}$/.test(p[1])) {
+          const year = parseInt(p[1]);
+          const month = parseInt(p[0]) || 1;
+          return new Date(year, month - 1, 1).getTime();
+        }
+        if (/^\d{4}$/.test(p[0])) {
+          const year = parseInt(p[0]);
+          const month = parseInt(p[1]) || 1;
+          return new Date(year, month - 1, 1).getTime();
+        }
+      }
+
+      const yearMatch = s.match(/\b(19\d\d|20\d\d)\b/);
+      if (yearMatch) {
+        return new Date(parseInt(yearMatch[1]), 0, 1).getTime();
+      }
+
+      const parsed = Date.parse(s);
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
+    let list: HistoryItem[] = [];
+    if (selectedKalijabatHistory.parsedHistory && selectedKalijabatHistory.parsedHistory.length > 0) {
+      list = [...selectedKalijabatHistory.parsedHistory];
+    } else {
+      list = (selectedKalijabatHistory.history || []).map((j, idx) => ({
+        urutan: idx + 1,
+        jabatan: j,
+        unit: '-',
+        startDate: '-',
+        endDate: '-',
+      }));
+    }
+
+    // Ensure list count strictly matches selectedKalijabatHistory.kali
+    const targetKali = selectedKalijabatHistory.kali || 0;
+    if (targetKali > 0) {
+      if (list.length < targetKali) {
+        const missingCount = targetKali - list.length;
+        for (let i = 0; i < missingCount; i++) {
+          list.push({
+            urutan: list.length + 1,
+            jabatan: selectedKalijabatHistory.jabatan || 'Jabatan',
+            unit: '-',
+            startDate: '-',
+            endDate: '-',
+          });
+        }
+      } else if (list.length > targetKali) {
+        list = list.slice(0, targetKali);
+      }
+    }
+
+    const sorted = list.sort((a, b) => {
+      const timeA = parseDate(a.startDate);
+      const timeB = parseDate(b.startDate);
+      if (timeA > 0 && timeB > 0) {
+        return timeB - timeA; // Descending by start date (newest first)
+      }
+      if (timeA > 0) return -1;
+      if (timeB > 0) return 1;
+      return 0;
+    });
+
+    return sorted.map((item, idx) => ({
+      ...item,
+      urutan: idx + 1,
+    }));
+  }, [selectedKalijabatHistory]);
 
   const uniqueKalijabatUnits = useMemo(() => {
     return Array.from(new Set(unitKaliJabat.map(d => d.unit).filter(Boolean))).sort();
@@ -1696,7 +1914,7 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
                         <td className="px-5 py-3.5 font-bold text-slate-800 dark:text-white">
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => setSelectedKalijabatHistory(d)}
+                              onClick={() => handleSelectKalijabatEmployee(d)}
                               className="text-left font-bold text-[#005BAC] dark:text-[#00C4CC] hover:underline cursor-pointer group flex items-center gap-1.5 focus:outline-none"
                               title="Klik untuk melihat riwayat jabatan pegawai"
                             >
@@ -1727,7 +1945,7 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
 
           {/* History Detail Card */}
           {selectedKalijabatHistory && (
-            <div className="bg-white dark:bg-slate-850 rounded-2xl shadow-lg border border-emerald-500/30 dark:border-teal-400/30 overflow-hidden transition-all duration-300">
+            <div ref={detailHistoryRef} className="bg-white dark:bg-slate-850 rounded-2xl shadow-lg border border-emerald-500/30 dark:border-teal-400/30 overflow-hidden transition-all duration-300">
               <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-750 bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -1748,8 +1966,19 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
                 <div className="flex items-center gap-3 self-end sm:self-auto">
                   <button
                     onClick={() => {
-                      const headers = ['Urutan', 'Nama Pegawai', 'Jabatan'];
-                      const rows = selectedKalijabatHistory.history.map((j, idx) => [idx + 1, selectedKalijabatHistory.nama, j]);
+                      if (displayHistoryList.length === 0) {
+                        onShowToast('Riwayat kosong', 'error');
+                        return;
+                      }
+                      const headers = ['No', 'Nama', 'Riwayat Jabatan', 'Nama Unit', 'Startdate', 'Enddate'];
+                      const rows = displayHistoryList.map((item, idx) => [
+                        idx + 1,
+                        item.namaPegawai || selectedKalijabatHistory.nama,
+                        item.jabatan,
+                        item.unit && item.unit !== 'null' ? item.unit : '-',
+                        item.startDate || '-',
+                        item.endDate || '-',
+                      ]);
                       const safeName = selectedKalijabatHistory.nama.replace(/[^a-zA-Z0-9 ]/g, '').trim().substring(0, 20);
                       exportToExcel(`Riwayat_Jabatan_${safeName}.xlsx`, 'Riwayat', headers, rows);
                       onShowToast('Berhasil mengunduh Riwayat Jabatan', 'success');
@@ -1773,29 +2002,41 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
                   <table className="w-full text-xs text-left text-slate-600 dark:text-slate-300 whitespace-nowrap">
                     <thead className="text-[11px] uppercase sticky top-0 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold z-10 border-b border-slate-200 dark:border-slate-700">
                       <tr>
-                        <th className="px-5 py-3.5 w-16 text-center">Urutan</th>
-                        <th className="px-5 py-3.5">Nama Riwayat Jabatan</th>
-                        <th className="px-5 py-3.5">Nama Unit</th>
+                        <th className="px-5 py-3.5 w-14 text-center">No</th>
+                        <th className="px-5 py-3.5 min-w-[180px]">Nama</th>
+                        <th className="px-5 py-3.5 min-w-[260px]">Riwayat Jabatan</th>
+                        <th className="px-5 py-3.5 min-w-[180px]">Nama Unit</th>
+                        <th className="px-5 py-3.5 text-center">Startdate</th>
+                        <th className="px-5 py-3.5 text-center">Enddate</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {selectedKalijabatHistory.history.length === 0 ? (
+                      {displayHistoryList.length === 0 ? (
                         <tr>
-                          <td colSpan={3} className="text-center py-6 text-slate-400 font-medium">
+                          <td colSpan={6} className="text-center py-6 text-slate-400 font-medium">
                             Tidak ada riwayat jabatan tercatat untuk {selectedKalijabatHistory.nama}.
                           </td>
                         </tr>
                       ) : (
-                        selectedKalijabatHistory.history.map((j, idx) => (
+                        displayHistoryList.map((item, idx) => (
                           <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                            <td className="px-5 py-3.5 text-center font-bold">{idx + 1}</td>
-                            <td className="px-5 py-3.5 font-semibold text-slate-800 dark:text-white whitespace-normal">
-                              {j}
+                            <td className="px-5 py-3.5 text-center font-bold text-slate-400">{idx + 1}</td>
+                            <td className="px-5 py-3.5 font-bold text-slate-800 dark:text-white whitespace-normal min-w-[180px]">
+                              {item.namaPegawai || selectedKalijabatHistory.nama}
                             </td>
-                            <td className="px-5 py-3.5">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-750 dark:text-slate-300">
-                                {selectedKalijabatHistory.unit}
+                            <td className="px-5 py-3.5 font-bold text-slate-800 dark:text-white whitespace-normal min-w-[260px]">
+                              {item.jabatan}
+                            </td>
+                            <td className="px-5 py-3.5 font-semibold text-slate-700 dark:text-slate-300">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-750 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                {item.unit && item.unit !== 'null' ? item.unit : '-'}
                               </span>
+                            </td>
+                            <td className="px-5 py-3.5 text-center font-mono text-xs font-semibold text-slate-600 dark:text-slate-300">
+                              {item.startDate || '-'}
+                            </td>
+                            <td className="px-5 py-3.5 text-center font-mono text-xs font-semibold text-slate-600 dark:text-slate-300">
+                              {item.endDate || '-'}
                             </td>
                           </tr>
                         ))

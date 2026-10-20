@@ -221,45 +221,378 @@ export function parseKalijabat(raw: any[][]): KalijabatItem[] {
   return items;
 }
 
+function normalizeEmpName(str: string): string {
+  if (!str) return '';
+  return String(str)
+    .toLowerCase()
+    .replace(/[,.](st|mt|se|ir|mm|s\.t|s\.e|m\.t|m\.m|s\.kom|m\.kom)\b/gi, '')
+    .replace(/[^a-z0-9 ]/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function formatExcelDate(val: any): string {
+  if (val === undefined || val === null) return '-';
+  const str = String(val).trim();
+  if (!str || str === 'null' || str === 'undefined' || str === '-') return '-';
+
+  // Numeric Excel serial date (e.g. 44196, 44926)
+  if (/^\d{5}(\.\d+)?$/.test(str)) {
+    const num = parseFloat(str);
+    const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+    if (!isNaN(date.getTime())) {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  }
+
+  // Format ISO or YYYY-MM-DD to DD-MM-YYYY if needed
+  if (/^\d{4}[-/.]\d{1,2}[-/.]\d{1,2}$/.test(str)) {
+    const parts = str.split(/[-/.]/);
+    const year = parts[0];
+    const month = parts[1].padStart(2, '0');
+    const day = parts[2].padStart(2, '0');
+    return `${day}-${month}-${year}`;
+  }
+
+  return str;
+}
+
 export function parseHistoryFromRjab(
   rawRjab: any[][],
   employeeName: string,
-  historyTitles: string[]
+  historyTitles: string[],
+  fallbackRjabs: any[][][] = [],
+  defaultUnit: string = '-'
 ): HistoryItem[] {
-  if (!rawRjab || rawRjab.length === 0 || !historyTitles || historyTitles.length === 0) return [];
+  if ((!rawRjab || rawRjab.length === 0) && fallbackRjabs.length === 0) return [];
+  if (!historyTitles || historyTitles.length === 0) return [];
 
-  const rjabRows = rawRjab.filter(r =>
-    r.some(c => String(c).toLowerCase().includes(employeeName.toLowerCase()))
-  );
+  const allSheets = [rawRjab, ...fallbackRjabs].filter(s => Array.isArray(s) && s.length > 0);
+  const normTarget = normalizeEmpName(employeeName);
 
   const detailData: HistoryItem[] = [];
 
-  historyTitles.forEach(jabatan => {
+  historyTitles.forEach((jabatan, index) => {
+    const rawJabatan = String(jabatan || '').trim();
+    if (!rawJabatan) return;
+
+    // Remove trailing position ID like '-30218752' or ' 30218752'
+    const idMatch = rawJabatan.match(/[-_ ]+(\d{6,10})$/);
+    const posId = idMatch ? idMatch[1] : '';
+    const cleanTitle = rawJabatan.replace(/[-_ ]+\d{6,10}$/, '').trim().toLowerCase();
+
     let unit = '-';
     let startDate = '-';
     let endDate = '-';
+    let matched: any[] | undefined = undefined;
 
-    const matched =
-      rjabRows.find(r => r.some(c => String(c).trim() === jabatan.trim())) ||
-      rjabRows.find(r => r.some(c => String(c).toLowerCase().includes(jabatan.toLowerCase())));
+    for (const sheet of allSheets) {
+      if (!sheet || sheet.length === 0) continue;
 
-    if (matched) {
-      unit = String(matched[6] || '-');
-      startDate = String(matched[10] || '-');
-      endDate = String(matched[11] || '-');
+      let idxNama = -1;
+      let idxJabatan = -1;
+      let idxUnit = -1;
+      let idxStart = -1;
+      let idxEnd = -1;
+
+      const headerRow = sheet[0] || [];
+      headerRow.forEach((col: any, idx: number) => {
+        const cStr = String(col || '').toLowerCase().trim();
+        if ((cStr.includes('personnel number') || cStr.includes('nama pegawai') || cStr === 'nama') && idxNama === -1) idxNama = idx;
+        if ((cStr.includes('nama panjang posisi') || cStr.includes('simkp') || cStr.includes('sebutan jabatan') || cStr.includes('nama jabatan') || cStr === 'position') && idxJabatan === -1) idxJabatan = idx;
+        if ((cStr.includes('personnel subarea') || cStr.includes('business area') || cStr.includes('nama unit') || cStr.includes('unit')) && idxUnit === -1) idxUnit = idx;
+        if ((cStr.includes('start') || cStr.includes('awal') || idx === 10) && idxStart === -1) idxStart = idx;
+        if ((cStr.includes('end') || cStr.includes('akhir') || idx === 11) && idxEnd === -1) idxEnd = idx;
+      });
+
+      if (idxNama === -1) idxNama = 1;
+      if (idxJabatan === -1) idxJabatan = 9;
+      if (idxUnit === -1) idxUnit = 6;
+      if (idxStart === -1) idxStart = 10;
+      if (idxEnd === -1) idxEnd = 11;
+
+      // Filter rows belonging strictly to the employee name column
+      const exactMatches = normTarget ? sheet.filter(r => {
+        if (!Array.isArray(r)) return false;
+        const cellName = String(r[idxNama] !== undefined && r[idxNama] !== null ? r[idxNama] : (r[1] || r[2] || '')).trim();
+        const normCell = normalizeEmpName(cellName);
+        return normCell === normTarget;
+      }) : [];
+
+      const rjabRows = exactMatches.length > 0 ? exactMatches : (normTarget ? sheet.filter(r => {
+        if (!Array.isArray(r)) return false;
+        const cellName = String(r[idxNama] !== undefined && r[idxNama] !== null ? r[idxNama] : (r[1] || r[2] || '')).trim();
+        const normCell = normalizeEmpName(cellName);
+        if (!normCell) return false;
+        const wordsCell = normCell.split(' ').sort().join(' ');
+        const wordsTarget = normTarget.split(' ').sort().join(' ');
+        return wordsCell === wordsTarget;
+      }) : []);
+
+      if (rjabRows.length > 0) {
+        // Try matching jabatan within employee's rows
+        matched = rjabRows.find(r => {
+          return r.some(c => {
+            const val = String(c || '').trim().toLowerCase();
+            if (!val) return false;
+            if (val === rawJabatan.toLowerCase()) return true;
+            if (cleanTitle && val === cleanTitle) return true;
+            if (posId && val.includes(posId)) return true;
+            if (cleanTitle && cleanTitle.length > 4 && val.includes(cleanTitle)) return true;
+            if (cleanTitle && cleanTitle.length > 4 && cleanTitle.includes(val) && val.length > 8) return true;
+            return false;
+          });
+        });
+
+        // Fallback to row index if title search doesn't find a direct match
+        if (!matched && rjabRows[index]) {
+          matched = rjabRows[index];
+        }
+      }
+
+      // If still not matched, try searching whole sheet for posId (position ID like 30144288)
+      if (!matched && posId && posId.length >= 6) {
+        matched = sheet.find(r => Array.isArray(r) && r.some(c => String(c || '').includes(posId)));
+      }
+
+      if (matched) {
+        const colJabatan = String(matched[9] !== undefined && matched[9] !== null && String(matched[9]).trim() !== '' ? matched[9] : (matched[8] || matched[idxJabatan] || rawJabatan)).trim();
+        let colUnit = String(matched[6] !== undefined && matched[6] !== null && String(matched[6]).trim() !== '' && String(matched[6]).trim() !== String(matched[4]).trim() ? matched[6] : (matched[5] || matched[7] || matched[idxUnit] || '')).trim();
+        const colStart = matched[idxStart] !== undefined && matched[idxStart] !== null && String(matched[idxStart]).trim() !== '' ? matched[idxStart] : matched[10];
+        const colEnd = matched[idxEnd] !== undefined && matched[idxEnd] !== null && String(matched[idxEnd]).trim() !== '' ? matched[idxEnd] : matched[11];
+
+        unit = colUnit && colUnit !== 'null' && colUnit !== 'undefined' && colUnit !== '-' ? colUnit : defaultUnit;
+        startDate = formatExcelDate(colStart);
+        endDate = formatExcelDate(colEnd);
+
+        detailData.push({
+          namaPegawai: employeeName,
+          jabatan: colJabatan && colJabatan !== 'null' ? colJabatan : rawJabatan,
+          unit: unit !== '-' && unit !== 'null' ? unit : defaultUnit,
+          startDate: startDate || '-',
+          endDate: endDate || '-',
+        });
+        break;
+      }
+    }
+  });
+
+  const parseDate = (d: string): number => {
+    if (!d || d === '-' || d === 'null' || d === 'undefined') return 0;
+    const s = String(d).trim();
+    if (!s || s === '-') return 0;
+
+    // Numeric Excel serial date (e.g. 44196, 44926)
+    if (/^\d{5}(\.\d+)?$/.test(s)) {
+      const num = parseFloat(s);
+      const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+      return isNaN(date.getTime()) ? 0 : date.getTime();
     }
 
-    detailData.push({ jabatan, unit, startDate, endDate });
+    const months: { [key: string]: number } = {
+      jan: 1, januari: 1, feb: 2, februari: 2, mar: 3, maret: 3, apr: 4, april: 4,
+      mei: 5, jun: 6, juni: 6, jul: 7, juli: 7, agu: 8, agustus: 8, sep: 9, september: 9,
+      okt: 10, oktober: 10, nov: 11, november: 11, des: 12, desember: 12
+    };
+
+    const clean = s.toLowerCase();
+    for (const [mName, mNum] of Object.entries(months)) {
+      if (clean.includes(mName)) {
+        const yearMatch = clean.match(/\b(19\d\d|20\d\d)\b/);
+        if (yearMatch) {
+          const year = parseInt(yearMatch[1]);
+          const dayMatch = clean.match(/\b([0-2]?\d|3[01])\b/);
+          const day = dayMatch ? parseInt(dayMatch[1]) : 1;
+          return new Date(year, mNum - 1, day).getTime();
+        }
+      }
+    }
+
+    const p = s.split(/[-/. ]+/);
+
+    if (p.length === 3) {
+      if (/^\d{4}$/.test(p[2])) {
+        const year = parseInt(p[2]);
+        const month = parseInt(p[1]) || 1;
+        const day = parseInt(p[0]) || 1;
+        return new Date(year, month - 1, day).getTime();
+      }
+      if (/^\d{4}$/.test(p[0])) {
+        const year = parseInt(p[0]);
+        const month = parseInt(p[1]) || 1;
+        const day = parseInt(p[2]) || 1;
+        return new Date(year, month - 1, day).getTime();
+      }
+    }
+
+    if (p.length === 2) {
+      if (/^\d{4}$/.test(p[1])) {
+        const year = parseInt(p[1]);
+        const month = parseInt(p[0]) || 1;
+        return new Date(year, month - 1, 1).getTime();
+      }
+      if (/^\d{4}$/.test(p[0])) {
+        const year = parseInt(p[0]);
+        const month = parseInt(p[1]) || 1;
+        return new Date(year, month - 1, 1).getTime();
+      }
+    }
+
+    const yearMatch = s.match(/\b(19\d\d|20\d\d)\b/);
+    if (yearMatch) {
+      return new Date(parseInt(yearMatch[1]), 0, 1).getTime();
+    }
+
+    const parsed = Date.parse(s);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  detailData.sort((a, b) => {
+    const timeA = parseDate(a.startDate);
+    const timeB = parseDate(b.startDate);
+    if (timeA > 0 && timeB > 0) {
+      return timeB - timeA; // Descending by start date
+    }
+    if (timeA > 0) return -1;
+    if (timeB > 0) return 1;
+    return 0;
+  });
+
+  return detailData.map((d, index) => ({
+    ...d,
+    urutan: index + 1,
+  }));
+}
+
+export function parseHistoryDirectFromRjab(
+  rawRjab: any[][],
+  employeeName: string,
+  fallbackRjabs: any[][][] = []
+): HistoryItem[] {
+  if ((!rawRjab || rawRjab.length === 0) && fallbackRjabs.length === 0) return [];
+  const normTarget = normalizeEmpName(employeeName);
+  if (!normTarget) return [];
+
+  const allSheets = [rawRjab, ...fallbackRjabs].filter(s => Array.isArray(s) && s.length > 0);
+
+  let targetRows: any[] = [];
+  let targetSheet: any[][] | null = null;
+
+  for (const sheet of allSheets) {
+    if (!sheet || sheet.length === 0) continue;
+
+    let idxNama = -1;
+    let idxJabatan = -1;
+    let idxUnit = -1;
+    let idxStart = -1;
+    let idxEnd = -1;
+
+    const headerRow = sheet[0] || [];
+    headerRow.forEach((col: any, idx: number) => {
+      const cStr = String(col || '').toLowerCase().trim();
+      if ((cStr.includes('personnel number') || cStr.includes('nama pegawai') || cStr === 'nama') && idxNama === -1) idxNama = idx;
+      if ((cStr.includes('nama panjang posisi') || cStr.includes('simkp') || cStr.includes('sebutan jabatan') || cStr.includes('nama jabatan') || cStr === 'position') && idxJabatan === -1) idxJabatan = idx;
+      if ((cStr.includes('personnel subarea') || cStr.includes('business area') || cStr.includes('nama unit') || cStr.includes('unit')) && idxUnit === -1) idxUnit = idx;
+      if ((cStr.includes('start') || cStr.includes('awal') || idx === 10) && idxStart === -1) idxStart = idx;
+      if ((cStr.includes('end') || cStr.includes('akhir') || idx === 11) && idxEnd === -1) idxEnd = idx;
+    });
+
+    if (idxNama === -1) idxNama = 1;
+    if (idxJabatan === -1) idxJabatan = 9;
+    if (idxUnit === -1) idxUnit = 6;
+    if (idxStart === -1) idxStart = 10;
+    if (idxEnd === -1) idxEnd = 11;
+
+    const exactMatches = sheet.filter(r => {
+      if (!Array.isArray(r)) return false;
+      const cellName = String(r[idxNama] !== undefined && r[idxNama] !== null ? r[idxNama] : (r[1] || r[2] || '')).trim();
+      const normCell = normalizeEmpName(cellName);
+      return normCell === normTarget;
+    });
+
+    if (exactMatches.length > 0) {
+      targetRows = exactMatches;
+      targetSheet = sheet;
+      break;
+    }
+
+    const wordMatches = sheet.filter(r => {
+      if (!Array.isArray(r)) return false;
+      const cellName = String(r[idxNama] !== undefined && r[idxNama] !== null ? r[idxNama] : (r[1] || r[2] || '')).trim();
+      const normCell = normalizeEmpName(cellName);
+      if (!normCell) return false;
+      const wordsCell = normCell.split(' ').sort().join(' ');
+      const wordsTarget = normTarget.split(' ').sort().join(' ');
+      return wordsCell === wordsTarget;
+    });
+
+    if (wordMatches.length > 0) {
+      targetRows = wordMatches;
+      targetSheet = sheet;
+      break;
+    }
+  }
+
+  if (targetRows.length === 0 || !targetSheet) return [];
+
+  // Determine dynamic column indices for targetSheet
+  let idxNama = -1;
+  let idxJabatan = -1;
+  let idxUnit = -1;
+  let idxStart = -1;
+  let idxEnd = -1;
+
+  const headerRow = targetSheet[0] || [];
+  headerRow.forEach((col: any, idx: number) => {
+    const cStr = String(col || '').toLowerCase().trim();
+    if ((cStr.includes('personnel number') || cStr.includes('nama pegawai') || cStr === 'nama') && idxNama === -1) idxNama = idx;
+    if ((cStr.includes('nama panjang posisi') || cStr.includes('simkp') || cStr.includes('sebutan jabatan') || cStr.includes('nama jabatan') || cStr === 'position') && idxJabatan === -1) idxJabatan = idx;
+    if ((cStr.includes('personnel subarea') || cStr.includes('business area') || cStr.includes('nama unit') || cStr.includes('unit')) && idxUnit === -1) idxUnit = idx;
+    if ((cStr.includes('start') || cStr.includes('awal') || idx === 10) && idxStart === -1) idxStart = idx;
+    if ((cStr.includes('end') || cStr.includes('akhir') || idx === 11) && idxEnd === -1) idxEnd = idx;
+  });
+
+  if (idxNama === -1) idxNama = 1;
+  if (idxJabatan === -1) idxJabatan = 9;
+  if (idxUnit === -1) idxUnit = 6;
+  if (idxStart === -1) idxStart = 10;
+  if (idxEnd === -1) idxEnd = 11;
+
+  const detailData: HistoryItem[] = [];
+
+  targetRows.forEach(r => {
+    let rawJabatan = String(r[9] !== undefined && r[9] !== null && String(r[9]).trim() !== '' ? r[9] : (r[8] || r[idxJabatan] || '')).trim();
+    let rawUnitVal = String(r[6] !== undefined && r[6] !== null && String(r[6]).trim() !== '' && String(r[6]).trim() !== String(r[4]).trim() ? r[6] : (r[5] || r[7] || r[idxUnit] || '')).trim();
+
+    const rawStartVal = r[idxStart] !== undefined && r[idxStart] !== null && String(r[idxStart]).trim() !== '' ? r[idxStart] : r[10];
+    const rawEndVal = r[idxEnd] !== undefined && r[idxEnd] !== null && String(r[idxEnd]).trim() !== '' ? r[idxEnd] : r[11];
+
+    // Skip header or non-position rows
+    if (!rawJabatan || rawJabatan.toLowerCase().includes('personnel number') || rawJabatan.toLowerCase().includes('nama panjang posisi') || rawJabatan.toLowerCase().includes('sebutan jabatan')) {
+      return;
+    }
+
+    detailData.push({
+      namaPegawai: employeeName,
+      jabatan: rawJabatan,
+      unit: rawUnitVal && rawUnitVal !== 'null' && rawUnitVal !== 'undefined' ? rawUnitVal : '-',
+      startDate: formatExcelDate(rawStartVal),
+      endDate: formatExcelDate(rawEndVal),
+    });
   });
 
   const parseDate = (d: string) => {
-    if (!d || d === '-') return 0;
-    const p = String(d).trim().split(/[-/]/);
+    if (!d || d === '-' || d === 'null' || d === 'undefined') return 0;
+    const s = String(d).trim();
+    const p = s.split(/[-/.]/);
     if (p.length === 3) {
-      if (p[2].length === 4) return new Date(`${p[2]}-${p[1]}-${p[0]}T00:00:00`).getTime();
-      if (p[0].length === 4) return new Date(`${p[0]}-${p[1]}-${p[2]}T00:00:00`).getTime();
+      if (p[2].length === 4) return new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0])).getTime();
+      if (p[0].length === 4) return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])).getTime();
     }
-    const parsed = Date.parse(d);
+    const parsed = Date.parse(s);
     return isNaN(parsed) ? 0 : parsed;
   };
 

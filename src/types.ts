@@ -40,6 +40,7 @@ export interface FnpItem {
 
 export interface HistoryItem {
   urutan?: number;
+  namaPegawai?: string;
   jabatan: string;
   unit: string;
   startDate: string;
