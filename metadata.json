@@ -1,0 +1,6 @@
+{
+  "name": "MHC PLN - Manajemen Human Capital",
+  "description": "Sistem informasi Manajemen Human Capital (MHC) PLN untuk monitoring pegawai, FTK, mobility, FnP, grade pivot, dan analisa jabatan per unit.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
