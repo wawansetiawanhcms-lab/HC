@@ -28,6 +28,7 @@ import {
   History,
   LayoutGrid,
   BarChart3,
+  Search,
 } from 'lucide-react';
 import { Employee, FTKItem, FnpItem, KalijabatItem, BoxTalentItem, MonitoringFjItem, HistoryItem, PageId } from '../types';
 import { exportToExcel, parseHistoryFromRjab, parseHistoryDirectFromRjab } from '../services/sheetService';
@@ -87,6 +88,7 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
   const chartKaliJabatKatRef = useRef<HTMLCanvasElement | null>(null);
   const chartInstances = useRef<{ [key: string]: ChartJS | null }>({});
   const [kalijabatUnitFilter, setKalijabatUnitFilter] = useState<string>('all');
+  const [kalijabatSearch, setKalijabatSearch] = useState<string>('');
   const detailHistoryRef = useRef<HTMLDivElement | null>(null);
   const [selectedKalijabatHistory, setSelectedKalijabatHistory] = useState<{
     nama: string;
@@ -700,9 +702,17 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
   }, [unitKaliJabat]);
 
   const filteredUnitKaliJabat = useMemo(() => {
-    if (kalijabatUnitFilter === 'all') return unitKaliJabat;
-    return unitKaliJabat.filter(d => d.unit === kalijabatUnitFilter);
-  }, [unitKaliJabat, kalijabatUnitFilter]);
+    return unitKaliJabat.filter(d => {
+      const matchUnitVal = kalijabatUnitFilter === 'all' || d.unit === kalijabatUnitFilter;
+      const q = kalijabatSearch.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        d.nama.toLowerCase().includes(q) ||
+        d.unit.toLowerCase().includes(q) ||
+        d.jabatan.toLowerCase().includes(q);
+      return matchUnitVal && matchSearch;
+    });
+  }, [unitKaliJabat, kalijabatUnitFilter, kalijabatSearch]);
 
   const kaliJabatStats = useMemo(() => {
     const freqMap: { [key: string]: number } = {};
@@ -1871,6 +1881,27 @@ export const UnitDashboardPage: React.FC<UnitDashboardPageProps> = ({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Search Nama Pegawai Kali Jabat */}
+                <div className="relative w-full sm:w-56">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Cari nama pegawai..."
+                    value={kalijabatSearch}
+                    onChange={(e) => setKalijabatSearch(e.target.value)}
+                    className="w-full pl-9 pr-8 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                  />
+                  {kalijabatSearch && (
+                    <button
+                      onClick={() => setKalijabatSearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                      title="Hapus pencarian"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
                 <button
                   onClick={() => {
